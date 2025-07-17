@@ -1,0 +1,65 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Будущее 2.0 — Целевая архитектура (через 1 год)
+
+Person(client, "Клиент", "Пользователь финтех-сервисов")
+Person(doctor, "Врач", "Использует медицинские данные")
+Person(analyst, "Аналитик", "Работает с отчётами")
+Person(admin, "Администратор", "Управляет доступами, системами и процессами")
+
+System_Boundary(main_system, "Будущее 2.0") {
+
+    Container(web_portal, "Портал самообслуживания", "React / Vue", "Доступ к BI-отчётам, визуализация, self-service конструктор отчётов")
+
+    Container(api_gateway, "API Gateway", "Kong", "Централизованный доступ к backend-сервисам")
+    Container(auth, "Identity Provider", "Keycloak", "Аутентификация, авторизация, OAuth2/OpenID")
+    
+    Container(event_bus, "Шина событий", "Apache Kafka", "Потоковая передача данных между сервисами")
+    Container(modern_esb, "Интеграционная шина", "Apache Camel", "Интеграция, оркестрация и маршрутизация")
+
+    Container(data_lake, "Data Lake", "HDFS / Azure Data Lake", "Сырые данные от всех источников")
+    Container(etl_service, "ETL/ELT сервис", "Apache Spark / dbt", "Обработка и трансформация данных")
+    Container(modern_dwh, "Современный DWH", "Snowflake / BigQuery", "Модельные данные для аналитики")
+    Container(legacy_dwh, "Унаследованный DWH", "SQL Server 2008", "Только чтение, исторические данные")
+
+    Container(bi_platform, "BI-платформа", "Power BI / Tableau / Metabase", "Инструмент визуализации и отчётности")
+
+    Container(ai_platform, "AI Backend", "Python + ClickHouse", "Анализ и обучение ML моделей")
+
+    Container(gov_gateway, "Внешний медицинский API Gateway", "Kong / Spring", "Интеграция с LIS, Pharma и гос.системами")
+}
+
+System_Ext(clinics, "Медицинские системы", "Отправка мед. событий")
+System_Ext(fintech_services, "Финтех-сервисы", "Java / Go")
+System_Ext(ai_services, "ИИ-модули", "TensorFlow / PyTorch")
+System_Ext(lis, "LIS", "Лабораторные ИС")
+System_Ext(pharma, "Pharma", "Склад и аптеки")
+
+Rel(client, web_portal, "Использует портал", "HTTPS")
+Rel(doctor, web_portal, "Доступ к отчётам и аналитике", "HTTPS")
+Rel(analyst, bi_platform, "Создаёт и просматривает отчёты", "HTTPS")
+Rel(admin, auth, "Управление доступами", "HTTPS")
+
+Rel(web_portal, api_gateway, "API запросы", "HTTPS")
+Rel(api_gateway, auth, "Аутентификация и авторизация", "OAuth2")
+Rel(api_gateway, modern_esb, "Маршрутизация к backend", "REST/gRPC")
+
+Rel(modern_esb, event_bus, "Публикация событий", "Kafka Producer")
+Rel(event_bus, etl_service, "Консьюминг событий", "Kafka Consumer")
+Rel(etl_service, data_lake, "Запись сырых данных")
+Rel(etl_service, modern_dwh, "Запись агрегированных данных")
+Rel(modern_esb, legacy_dwh, "Чтение истории (до миграции)")
+
+Rel(bi_platform, modern_dwh, "BI-отчёты", "SQL")
+Rel(bi_platform, legacy_dwh, "Исторические отчёты", "SQL")
+Rel(ai_platform, modern_dwh, "Модельные данные", "SQL")
+Rel(ai_platform, data_lake, "Сырые данные", "SQL / API")
+
+Rel(fintech_services, modern_esb, "Финансовые данные", "HTTPS/REST")
+Rel(clinics, modern_esb, "Медицинские события", "HTTPS")
+Rel(ai_services, modern_esb, "ИИ-анализ", "HTTPS")
+Rel(gov_gateway, lis, "API-запросы", "REST")
+Rel(gov_gateway, pharma, "API-запросы", "REST")
+
+@enduml
