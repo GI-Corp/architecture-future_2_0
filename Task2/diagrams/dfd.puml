@@ -1,0 +1,49 @@
+@startuml
+title DFD: Целевая архитектура с разделением на домены
+
+skinparam rectangle {
+  BackgroundColor White
+  BorderColor Black
+}
+
+rectangle "Клиники / LIS\n(источник мед. событий)" as clinics
+rectangle "Финтех-сервисы" as fintech
+rectangle "ИИ-сервисы" as ai
+rectangle "Pharma / склады" as pharma
+
+rectangle "Медицинский домен" as medical
+rectangle "Финансовый домен" as finance
+rectangle "Домен персонала\nи ресурсов" as staff
+rectangle "Домен аналитики\nи витрин" as analytics
+
+rectangle "Data Lake\n(сырые данные)" as lake
+rectangle "ETL/ELT" as etl
+rectangle "DWH\n(BigQuery / Snowflake)" as dwh
+
+rectangle "Витрина мед.данных" as mart_med
+rectangle "Витрина фин.данных" as mart_fin
+rectangle "Витрина данных персонала" as mart_staff
+
+rectangle "BI-платформа\nPower BI / Tableau" as bi
+
+clinics --> medical : "Медицинские события\n(FHIR, HL7, API)"
+pharma --> staff : "Складские данные\n(лекарства, оборудование)"
+fintech --> finance : "Финансовые операции\n(REST/gRPC)"
+ai --> medical : "Результаты анализа,\nобученные модели"
+
+medical --> lake : "Сырые мед.данные"
+finance --> lake : "Сырые фин.данные"
+staff --> lake : "Сырые HR / инвентарные данные"
+
+lake --> etl : "Трансформация данных"
+etl --> dwh : "Загрузка в DWH"
+
+dwh --> mart_med : "Медицинские агрегаты"
+dwh --> mart_fin : "Финансовые агрегаты"
+dwh --> mart_staff : "Аналитика персонала"
+
+mart_med --> bi : "Медицинская аналитика"
+mart_fin --> bi : "Финансовые отчёты"
+mart_staff --> bi : "HR-инсайты"
+
+@enduml
